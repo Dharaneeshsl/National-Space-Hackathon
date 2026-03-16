@@ -1,44 +1,75 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: dark;
-  font-family: "Space Grotesk", sans-serif;
+@layer base {
+  :root {
+    color-scheme: dark;
+    font-family: "Space Grotesk", sans-serif;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 242, 255, 0.3) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: rgba(0, 242, 255, 0.4);
+    border-radius: 999px;
+    transition: background 0.2s ease;
+  }
+  
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 242, 255, 0.8);
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+  }
+
+  body {
+    margin: 0;
+    background-color: #030305;
+    color: #f0faff;
+    overflow: hidden;
+    /* Animated deep space gradient background */
+    background-image:
+      radial-gradient(circle at 15% 50%, rgba(0, 242, 255, 0.06), transparent 40%),
+      radial-gradient(circle at 85% 30%, rgba(188, 19, 254, 0.06), transparent 40%),
+      radial-gradient(circle at 50% 80%, rgba(0, 255, 153, 0.04), transparent 50%);
+    background-attachment: fixed;
+  }
+  
+  body::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: 
+      radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.5;
+    animation: drift 60s linear infinite;
+  }
 }
 
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 242, 255, 0.4) transparent;
+@layer utilities {
+  .neon-text-cyan {
+    text-shadow: 0 0 12px rgba(0, 242, 255, 0.8), 0 0 24px rgba(0, 242, 255, 0.4);
+  }
+  
+  .neon-text-magenta {
+    text-shadow: 0 0 12px rgba(188, 19, 254, 0.8), 0 0 24px rgba(188, 19, 254, 0.4);
+  }
+  
+  .glass-effect {
+    @apply bg-surface backdrop-blur-xl border border-white/10 shadow-xl;
+  }
 }
 
-*::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: rgba(0, 242, 255, 0.4);
-  border-radius: 999px;
-}
-
-body {
-  margin: 0;
-  background: #050505;
-  color: #e6faff;
-  overflow: hidden;
-  background-image:
-    radial-gradient(circle at 20% 20%, rgba(0, 242, 255, 0.08), transparent 35%),
-    radial-gradient(circle at 80% 10%, rgba(188, 19, 254, 0.12), transparent 30%),
-    radial-gradient(circle at 50% 80%, rgba(0, 255, 153, 0.08), transparent 40%),
-    radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: auto, auto, auto, 3px 3px;
-}
-
-.neon-text {
-  text-shadow: 0 0 10px rgba(0, 242, 255, 0.7);
-}
-
-.glow-ring {
-  box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+@keyframes drift {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50px); }
 }

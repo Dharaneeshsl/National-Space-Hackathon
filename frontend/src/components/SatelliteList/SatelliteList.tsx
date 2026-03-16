@@ -1,4 +1,5 @@
-﻿import { useMemo, useState } from "react"
+import { useMemo, useState } from "react"
+import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { Tooltip } from "@/components/ui/tooltip"
 import type { Satellite } from "@/store/useTelemetryStore"
@@ -34,34 +35,40 @@ export function SatelliteList({ satellites, selectedId, onSelect }: SatelliteLis
             sat.status === "critical" ? "bg-red-500/80" : sat.status === "maneuvering" ? "bg-orange-400/80" : "bg-green-400/80"
           return (
             <Tooltip key={sat.id} content={`Status: ${sat.status ?? "nominal"} | Risk: ${sat.collisionRisk ?? "safe"}`}>
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => onSelect(sat.id)}
                 className={cn(
-                  "w-full rounded-lg border border-white/10 bg-white/5 p-3 text-left transition hover:border-cyan-400/50",
-                  selectedId === sat.id && "border-cyan-400/70 bg-cyan-400/10"
+                  "w-full rounded-xl border bg-surface/40 p-3 text-left transition-all duration-300 backdrop-blur-md",
+                  selectedId === sat.id 
+                    ? "border-primary shadow-glow-cyan bg-primary/20"
+                    : "border-white/10 hover:border-primary/50 hover:bg-white/10 hover:shadow-glow-cyan"
                 )}
               >
-                <div className="flex items-center justify-between text-xs text-white/80">
-                  <span className="font-semibold tracking-[0.2em]">{sat.id}</span>
-                  <span className={cn("h-2 w-2 rounded-full", statusColor)} />
+                <div className="flex items-center justify-between text-xs text-white/90">
+                  <span className={cn("font-bold tracking-[0.2em] transition-colors", selectedId === sat.id ? "text-primary" : "")}>{sat.id}</span>
+                  <span className={cn("h-2 w-2 rounded-full shadow-lg", statusColor)} />
                 </div>
                 <div className="mt-2">
-                  <div className="flex items-center justify-between text-[10px] text-white/50">
+                  <div className="flex items-center justify-between text-[10px] text-white/60">
                     <span>Fuel</span>
-                    <span>{Math.round((sat.fuel ?? 0.5) * 100)}%</span>
+                    <span className={selectedId === sat.id ? "text-primary font-bold" : ""}>{Math.round((sat.fuel ?? 0.5) * 100)}%</span>
                   </div>
-                  <div className="mt-1 h-1.5 rounded-full bg-white/10">
-                    <div
-                      className="h-1.5 rounded-full bg-gradient-to-r from-green-400 via-yellow-400 to-red-500 shadow-[0_0_10px_rgba(0,242,255,0.4)]"
-                      style={{ width: `${Math.round((sat.fuel ?? 0.5) * 100)}%` }}
+                  <div className="mt-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.round((sat.fuel ?? 0.5) * 100)}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      className="h-full rounded-full bg-gradient-to-r from-success via-warning to-danger shadow-glow-cyan"
                     />
                   </div>
-                  <div className="mt-2 flex items-center justify-between text-[10px] text-white/40">
+                  <div className="mt-2 flex items-center justify-between text-[10px] text-white/50">
                     <span>Slot Δ</span>
                     <span>{sat.slotDistanceKm ?? 0} km</span>
                   </div>
                 </div>
-              </button>
+              </motion.button>
             </Tooltip>
           )
         })}

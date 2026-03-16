@@ -1,16 +1,26 @@
-﻿import * as React from "react"
+import * as React from "react"
 import { cn } from "@/lib/utils"
+import { motion, HTMLMotionProps } from "framer-motion"
 
-const Button = React.forwardRef<HTMLButtonElement, React.ButtonHTMLAttributes<HTMLButtonElement>>(
-  ({ className, ...props }, ref) => (
-    <button
+export interface ButtonProps extends HTMLMotionProps<"button"> {}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, children, ...props }, ref) => (
+    <motion.button
       ref={ref}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       className={cn(
-        "inline-flex items-center justify-center rounded-md border border-cyan-400/40 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-widest text-cyan-200 shadow-[0_0_20px_rgba(0,242,255,0.2)] transition hover:bg-cyan-400/20 hover:text-white",
+        "group relative inline-flex items-center justify-center overflow-hidden rounded-md border border-primary/40 bg-primary/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary shadow-glow-cyan backdrop-blur-md transition-all duration-300 hover:border-primary hover:bg-primary/20",
         className
       )}
       {...props}
-    />
+    >
+      <span className="relative z-10 group-hover:neon-text-cyan transition-all duration-300">
+        {children as React.ReactNode}
+      </span>
+      <div className="absolute inset-0 z-0 bg-glass-gradient opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+    </motion.button>
   )
 )
 Button.displayName = "Button"

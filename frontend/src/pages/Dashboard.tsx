@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { SystemStatusBar } from "@/components/SystemStatusBar/SystemStatusBar"
 import { OrbitVisualizer } from "@/components/OrbitVisualizer/OrbitVisualizer"
 import { GroundTrackMap } from "@/components/GroundTrackMap/GroundTrackMap"
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { useTelemetryPolling } from "@/hooks/useTelemetryPolling"
 import { useTelemetryStore, type Satellite } from "@/store/useTelemetryStore"
 import { positionFromElements } from "@/services/orbit"
+import { motion } from "framer-motion"
 
 export function Dashboard() {
   useTelemetryPolling()
@@ -36,19 +37,31 @@ export function Dashboard() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(0,242,255,0.08),_transparent_50%),radial-gradient(circle_at_30%_20%,_rgba(188,19,254,0.12),_transparent_45%)]" />
 
       {critical && (
-        <div className="pointer-events-none absolute inset-0 z-40 border-2 border-red-500/60 shadow-[0_0_40px_rgba(255,0,0,0.4)]">
-          <div className="absolute right-6 top-16 rounded-md border border-red-500/60 bg-red-500/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-red-200">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="pointer-events-none absolute inset-0 z-40 border-2 border-danger/60 shadow-glow-red"
+        >
+          <div className="absolute right-6 top-16 rounded-md border border-danger/60 bg-danger/10 px-4 py-2 text-xs uppercase tracking-[0.3em] text-red-200 shadow-glow-red backdrop-blur-md">
             Critical Conjunction Warning
           </div>
-          <div className="absolute right-10 top-10 h-24 w-24 animate-ping rounded-full border border-red-500/50" />
-        </div>
+          <motion.div 
+            animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className="absolute right-10 top-10 h-24 w-24 rounded-full border-2 border-danger/80" 
+          />
+        </motion.div>
       )}
 
       {loading && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60">
-          <div className="rounded-lg border border-cyan-400/30 bg-black/70 px-6 py-4 text-xs uppercase tracking-[0.3em] text-cyan-200 shadow-[0_0_30px_rgba(0,242,255,0.3)]">
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="rounded-xl border border-primary/30 bg-panel px-8 py-5 text-sm uppercase tracking-[0.3em] text-primary shadow-glow-cyan"
+          >
             Syncing Telemetry Feed...
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -61,15 +74,23 @@ export function Dashboard() {
           </div>
         )}
 
-        <div className="grid flex-1 grid-cols-1 gap-4 px-6 py-4 lg:grid-cols-[260px_1fr] xl:grid-cols-[280px_1fr_340px]">
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+          }}
+          className="grid flex-1 grid-cols-1 gap-5 px-6 py-4 lg:grid-cols-[260px_1fr] xl:grid-cols-[280px_1fr_340px]"
+        >
           <GlassPanel className="flex flex-col" glow="magenta">
             <SatelliteList satellites={satellites} selectedId={selectedId} onSelect={selectSatellite} />
-            <div className="mt-6">
+            <div className="mt-6 flex-1">
               <FuelHeatmap satellites={satellites} />
             </div>
           </GlassPanel>
 
-          <div className="relative flex h-full flex-col gap-4">
+          <div className="relative flex h-full flex-col gap-5">
             <GlassPanel className="relative flex-1 overflow-hidden" glow="cyan">
               <div className="absolute right-4 top-4 z-20">
                 <Button onClick={() => setFullscreen((prev) => !prev)}>
@@ -83,7 +104,7 @@ export function Dashboard() {
             </GlassPanel>
           </div>
 
-          <div className="flex h-full flex-col gap-4 xl:col-span-1 lg:col-span-2">
+          <div className="flex h-full flex-col gap-5 xl:col-span-1 lg:col-span-2">
             <GlassPanel glow="orange">
               <BullseyeChart satellites={satellites} selectedId={selectedId} />
             </GlassPanel>
@@ -91,13 +112,18 @@ export function Dashboard() {
               <TelemetryPanel satellites={satellites} selectedId={selectedId} />
             </GlassPanel>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="px-6 pb-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="px-6 pb-6"
+        >
           <GlassPanel glow="magenta">
             <ManeuverTimeline satellites={satellites} />
           </GlassPanel>
-        </div>
+        </motion.div>
       </div>
 
       {fullscreen && (
@@ -128,10 +154,10 @@ function enrichGroundTracks(satellites: Satellite[], timestamp?: string) {
     return {
       ...sat,
       position,
-      groundTrack: sat.groundTrack ?? [lon, lat],
+      groundTrack: (sat.groundTrack ?? [lon, lat]) as [number, number][],
       groundHistory: sat.groundHistory ?? history,
       groundPrediction: sat.groundPrediction ?? prediction,
-    }
+    } as Satellite
   })
 }
 
