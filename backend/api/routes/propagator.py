@@ -6,6 +6,7 @@ import time
 from models.satellite import StateVector, OrbitPoint, Vector3
 from core.propagator import tle_to_state_vector, propagate_rk4
 import data.db as db
+from core.collision_risk import get_collision_risk
 
 router = APIRouter(prefix="/api", tags=["Propagator"])
 
@@ -87,7 +88,7 @@ def get_snapshot():
             "velocity": sv.velocity.model_dump() if sv else {"x": 0, "y": 0, "z": 0},
             "status": "nominal",
             "fuel": sat.fuel_kg / 5000.0, # normalized dummy fuel
-            "collisionRisk": "safe",
+            "collisionRisk": get_collision_risk(sat.id),
             "mass_kg": sat.mass_kg,
             "cross_section_m2": sat.cross_section_m2
         })

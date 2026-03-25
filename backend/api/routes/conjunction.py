@@ -69,7 +69,7 @@ def assess_satellite_risk(req: AssessRequest):
         distances = compute_miss_distance(target_trajectory, other_trajectory)
         tca, min_dist, _ = find_tca(times, distances, req.time_window_hours)
         
-        if tca != -1 and min_dist < 100.0:  # Report anything under 100km
+        if tca != -1 and min_dist < 400.0:  # Hackathon demo: show any close approach within threshold
             prob = collision_probability(min_dist)
             events.append(ConjunctionEvent(
                 sat1_id=req.satellite_id,
@@ -105,7 +105,7 @@ def get_all_conjunctions(time_window_hours: float = 24.0):
             distances = compute_miss_distance(traj_i, traj_j)
             tca, min_dist, _ = find_tca(times, distances, time_window_hours)
             
-            if tca != -1 and min_dist < 100.0: # Report under 100km
+            if tca != -1 and min_dist < 400.0: # Hackathon demo: show any close approach within threshold
                 prob = collision_probability(min_dist)
                 events.append(ConjunctionEvent(
                     sat1_id=valid_ids[i],

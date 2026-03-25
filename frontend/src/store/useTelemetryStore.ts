@@ -1,4 +1,4 @@
-﻿import { create } from "zustand"
+import { create } from "zustand"
 
 export type RiskLevel = "safe" | "warning" | "critical"
 
@@ -28,7 +28,7 @@ export interface Satellite {
   name?: string
   position: Vector3
   orbitalElements?: OrbitElements
-  velocity?: number
+  velocity?: Vector3
   altitude?: number
   orbitalSpeed?: number
   fuel?: number

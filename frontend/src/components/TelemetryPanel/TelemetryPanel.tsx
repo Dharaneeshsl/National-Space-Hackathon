@@ -1,4 +1,4 @@
-﻿import { useMemo } from "react"
+import { useMemo } from "react"
 import type { Satellite } from "@/store/useTelemetryStore"
 
 interface TelemetryPanelProps {
@@ -15,7 +15,7 @@ export function TelemetryPanel({ satellites, selectedId }: TelemetryPanelProps) 
 
   const items = [
     { label: "Position", value: fmtVec(selected.position) },
-    { label: "Velocity", value: `${selected.velocity?.toFixed(2) ?? "--"} km/s` },
+    { label: "Velocity", value: `${selected.velocity ? Math.sqrt(selected.velocity.x**2 + selected.velocity.y**2 + selected.velocity.z**2).toFixed(2) : "--"} km/s` },
     { label: "Altitude", value: `${selected.altitude?.toFixed(0) ?? "--"} km` },
     { label: "Orbital Speed", value: `${selected.orbitalSpeed?.toFixed(2) ?? "--"} km/s` },
     { label: "Fuel", value: `${Math.round((selected.fuel ?? 0.5) * 100)}%` },

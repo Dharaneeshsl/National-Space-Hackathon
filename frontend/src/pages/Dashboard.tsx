@@ -97,7 +97,7 @@ export function Dashboard() {
                   {fullscreen ? "Exit Fullscreen" : "Fullscreen"}
                 </Button>
               </div>
-              <OrbitVisualizer satellites={satellites} debris={debris} selectedId={selectedId} onSelect={selectSatellite} />
+              {!fullscreen && <OrbitVisualizer satellites={satellites} debris={debris} selectedId={selectedId} onSelect={selectSatellite} />}
             </GlassPanel>
             <GlassPanel className="h-[240px]" glow="magenta">
               <GroundTrackMap satellites={satellites} timestamp={snapshot?.timestamp} />

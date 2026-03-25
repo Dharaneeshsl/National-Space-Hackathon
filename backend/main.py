@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+from core.collision_risk import compute_and_store_collision_risk
 
 import data.db as db
 
@@ -25,6 +26,8 @@ app.add_middleware(
 @app.on_event("startup")
 def startup_event():
     db.init_db()
+    # Precompute collision-risk cache so `/api/visualization/snapshot` stays fast.
+    compute_and_store_collision_risk()
 
 # Mount routers
 app.include_router(satellites.router)

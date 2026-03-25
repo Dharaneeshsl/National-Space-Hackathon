@@ -12,7 +12,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "@deck.gl/core": "^9.0.0",
     "@deck.gl/geo-layers": "^9.0.0",
