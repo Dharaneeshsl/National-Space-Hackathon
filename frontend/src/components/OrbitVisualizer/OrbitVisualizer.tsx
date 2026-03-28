@@ -1,4 +1,4 @@
-﻿import { Canvas, useFrame } from "@react-three/fiber"
+import { Canvas, useFrame } from "@react-three/fiber"
 import { OrbitControls, Stars } from "@react-three/drei"
 import { useEffect, useMemo, useRef } from "react"
 import * as THREE from "three"
@@ -91,7 +91,11 @@ function OrbitRings() {
   )
 }
 
-function SatelliteInstances({ satellites, selectedId, onSelect }: OrbitVisualizerProps) {
+function SatelliteInstances({
+  satellites,
+  selectedId,
+  onSelect,
+}: Pick<OrbitVisualizerProps, "satellites" | "selectedId" | "onSelect">) {
   const meshRef = useRef<THREE.InstancedMesh>(null)
   const colorArray = useMemo(() => new Float32Array(satellites.length * 3), [satellites.length])
 

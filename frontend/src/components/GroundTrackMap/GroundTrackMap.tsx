@@ -1,4 +1,4 @@
-﻿import DeckGL from "@deck.gl/react"
+import DeckGL from "@deck.gl/react"
 import { ScatterplotLayer, PathLayer, BitmapLayer } from "@deck.gl/layers"
 import { MapView } from "@deck.gl/core"
 import { TileLayer } from "@deck.gl/geo-layers"
@@ -20,11 +20,10 @@ export function GroundTrackMap({ satellites, timestamp }: GroundTrackMapProps) {
       maxZoom: 7,
       tileSize: 256,
       renderSubLayers: (props) => {
-        const {
-          bbox: { west, south, east, north },
-        } = props.tile
+        const bbox = props.tile.bbox
+        if (!("west" in bbox)) return null
+        const { west, south, east, north } = bbox
         return new BitmapLayer(props, {
-          data: null,
           image: props.data,
           bounds: [west, south, east, north],
         })
@@ -47,7 +46,11 @@ export function GroundTrackMap({ satellites, timestamp }: GroundTrackMapProps) {
     new ScatterplotLayer({
       id: "current-positions",
       data: satellites,
-      getPosition: (d: Satellite) => d.groundTrack ?? [0, 0],
+      getPosition: (d: Satellite) => {
+        const gt = d.groundTrack
+        if (Array.isArray(gt) && gt.length > 0) return gt[0] as [number, number]
+        return [0, 0] as [number, number]
+      },
       getFillColor: (d: Satellite) => (d.collisionRisk === "critical" ? [255, 80, 80] : [0, 255, 255]),
       getRadius: 15000,
       radiusUnits: "meters",

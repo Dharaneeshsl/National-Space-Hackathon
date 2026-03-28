@@ -1,4 +1,4 @@
-﻿import type { Snapshot, Satellite, DebrisObject } from "@/store/useTelemetryStore"
+import type { Snapshot, Satellite, DebrisObject } from "@/store/useTelemetryStore"
 
 const API_URL = "/api/visualization/snapshot"
 
@@ -36,6 +36,7 @@ export function generateMockSnapshot(seed = Date.now()): Snapshot {
     const angle = rand() * Math.PI * 2
     const inclination = (rand() * 60 - 30) * (Math.PI / 180)
     const radius = 1.2 + rand() * 0.4
+    const speed = 7.2 + rand() * 0.8
     return {
       id: `SAT-${(idx + 1).toString().padStart(3, "0")}`,
       fuel: Math.max(0.12, rand()),
@@ -46,7 +47,11 @@ export function generateMockSnapshot(seed = Date.now()): Snapshot {
         y: Math.sin(inclination) * radius * 0.4,
         z: Math.sin(angle) * radius,
       },
-      velocity: 7.2 + rand() * 0.8,
+      velocity: {
+        x: -Math.sin(angle) * speed * 0.01,
+        y: (rand() - 0.5) * 0.02,
+        z: Math.cos(angle) * speed * 0.01,
+      },
       altitude,
       orbitalSpeed: 7.3 + rand() * 0.5,
       nearestDebrisDistance: 0.4 + rand() * 10,

@@ -23,5 +23,8 @@ def test_snapshot():
     assert res.status_code == 200
     data = res.json()
     assert "timestamp" in data
+    assert isinstance(data["timestamp"], str)
     assert "satellites" in data
     assert isinstance(data["satellites"], list)
+    assert "debris_cloud" in data
+    assert data["debris_cloud"] == []

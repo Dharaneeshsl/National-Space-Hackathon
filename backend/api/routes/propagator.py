@@ -1,9 +1,11 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import numpy as np
 import time
 
-from models.satellite import StateVector, OrbitPoint, Vector3
+from models.satellite import OrbitPoint
 from core.propagator import tle_to_state_vector, propagate_rk4
 import data.db as db
 from core.collision_risk import get_collision_risk
@@ -63,37 +65,49 @@ def propagate_orbit(req: PropagationRequest):
 
     return {"trajectory": result}
 
-@router.get("/visualization/snapshot")
-def get_snapshot():
+
+def build_snapshot_payload() -> dict:
     """
-    Returns current positions of all satellites (called by frontend).
-    If a satellite only has a TLE, it is converted to a StateVector first.
+    Shared snapshot dict for GET /api/visualization/snapshot and /ws/telemetry.
+    Matches frontend Snapshot: ISO timestamp string, satellites, debris_cloud.
     """
     sats = db.get_all_satellites()
-    t_now = time.time()
-    
+    t_iso = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
     snapshot_sats = []
     for sat in sats:
         sv = sat.state_vector
         if not sv and sat.tle:
             try:
                 sv = tle_to_state_vector(sat.tle)
-            except:
+            except Exception:
                 pass
-                
-        snapshot_sats.append({
-            "id": sat.id,
-            "name": sat.name,
-            "position": sv.position.model_dump() if sv else {"x": 0, "y": 0, "z": 0},
-            "velocity": sv.velocity.model_dump() if sv else {"x": 0, "y": 0, "z": 0},
-            "status": "nominal",
-            "fuel": sat.fuel_kg / 5000.0, # normalized dummy fuel
-            "collisionRisk": get_collision_risk(sat.id),
-            "mass_kg": sat.mass_kg,
-            "cross_section_m2": sat.cross_section_m2
-        })
-        
+
+        snapshot_sats.append(
+            {
+                "id": sat.id,
+                "name": sat.name,
+                "position": sv.position.model_dump() if sv else {"x": 0, "y": 0, "z": 0},
+                "velocity": sv.velocity.model_dump() if sv else {"x": 0, "y": 0, "z": 0},
+                "status": "nominal",
+                "fuel": sat.fuel_kg / 5000.0,
+                "collisionRisk": get_collision_risk(sat.id),
+                "mass_kg": sat.mass_kg,
+                "cross_section_m2": sat.cross_section_m2,
+            }
+        )
+
     return {
-        "timestamp": t_now,
-        "satellites": snapshot_sats
+        "timestamp": t_iso,
+        "satellites": snapshot_sats,
+        "debris_cloud": [],
     }
+
+
+@router.get("/visualization/snapshot")
+def get_snapshot():
+    """
+    Returns current positions of all satellites (called by frontend).
+    If a satellite only has a TLE, it is converted to a StateVector first.
+    """
+    return build_snapshot_payload()

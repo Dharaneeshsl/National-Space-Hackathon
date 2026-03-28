@@ -1,4 +1,3 @@
-import { ResponsiveContainer, PolarAngleAxis, PolarGrid, PolarRadiusAxis, Scatter, ScatterChart } from "recharts"
 import type { Satellite } from "@/store/useTelemetryStore"
 
 interface BullseyeChartProps {
