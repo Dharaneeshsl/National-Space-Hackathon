@@ -1,1 +1,1 @@
-# empty init
+# tests package

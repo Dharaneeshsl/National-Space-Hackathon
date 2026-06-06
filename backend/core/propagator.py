@@ -47,9 +47,9 @@ def _j2_acceleration(positions):
     # J2 Perturbation
     j2_term = (1.5 * J2 * MU * R_E**2) / r5
     
-    ax_j2 = j2_term * (positions[:, 0] / r2) * (5 * (z2 / r2) - 1)
-    ay_j2 = j2_term * (positions[:, 1] / r2) * (5 * (z2 / r2) - 1)
-    az_j2 = j2_term * (positions[:, 2] / r2) * (5 * (z2 / r2) - 3)
+    ax_j2 = j2_term * positions[:, 0] * (5 * (z2 / r2) - 1)
+    ay_j2 = j2_term * positions[:, 1] * (5 * (z2 / r2) - 1)
+    az_j2 = j2_term * positions[:, 2] * (5 * (z2 / r2) - 3)
     
     a_j2 = np.column_stack((ax_j2, ay_j2, az_j2))
     

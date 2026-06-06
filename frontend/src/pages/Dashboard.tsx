@@ -145,20 +145,86 @@ function enrichGroundTracks(satellites: Satellite[], timestamp?: string) {
       y: Math.sin(idx * 0.4) * 0.2,
       z: Math.sin(idx) * 1.4,
     }
-    const computed = sat.position ?? (sat.orbitalElements && timestamp ? positionFromElements(sat.orbitalElements, timestamp) : null)
-    const position = computed ?? fallbackPosition
+    
+    let position = fallbackPosition
+    let altitude = sat.altitude
+    let orbitalSpeed = sat.orbitalSpeed
+    
+    if (sat.position) {
+      if (Math.abs(sat.position.x) > 100 || Math.abs(sat.position.y) > 100 || Math.abs(sat.position.z) > 100) {
+        const r_km = Math.sqrt(sat.position.x**2 + sat.position.y**2 + sat.position.z**2)
+        if (!altitude) altitude = r_km - 6378.137
+        
+        if (sat.velocity) {
+          if (!orbitalSpeed) orbitalSpeed = Math.sqrt(sat.velocity.x**2 + sat.velocity.y**2 + sat.velocity.z**2)
+        } else {
+          if (!orbitalSpeed) orbitalSpeed = Math.sqrt(398600.4418 / r_km)
+        }
+        
+        const scale = 1 / 6378.137
+        position = {
+          x: sat.position.x * scale,
+          y: sat.position.z * scale,
+          z: sat.position.y * scale
+        }
+      } else {
+        position = sat.position
+        const r_scaled = Math.sqrt(position.x**2 + position.y**2 + position.z**2)
+        if (!altitude) altitude = (r_scaled - 1.0) * 6378.137
+        if (!orbitalSpeed) orbitalSpeed = Math.sqrt(398600.4418 / (r_scaled * 6378.137))
+      }
+    } else if (sat.orbitalElements && timestamp) {
+      const computed = positionFromElements(sat.orbitalElements, timestamp)
+      if (computed) {
+        position = computed
+        const r_scaled = Math.sqrt(position.x**2 + position.y**2 + position.z**2)
+        if (!altitude) altitude = (r_scaled - 1.0) * 6371
+        if (!orbitalSpeed) orbitalSpeed = Math.sqrt(398600.4418 / (r_scaled * 6371))
+      }
+    }
+    
+    if (!altitude) altitude = 400.0
+    if (!orbitalSpeed) orbitalSpeed = 7.67
+    
     const lat = ((position.y ?? 0) * 90) % 180
     const lon = ((position.x ?? 0) * 180 + idx * 5) % 360
     const history = buildPath(lon, lat, -90)
     const prediction = buildPath(lon, lat, 90)
+    
+    const r2d = Math.sqrt(position.x**2 + position.z**2)
+    const angle = Math.atan2(position.z, position.x)
+    const satHistory = sat.history ?? generateVisualOrbitTrail(angle, r2d, position.y, -90, 0)
+    const satPrediction = sat.prediction ?? generateVisualOrbitTrail(angle, r2d, position.y, 0, 90)
+    
     return {
       ...sat,
       position,
+      altitude,
+      orbitalSpeed,
+      history: satHistory,
+      prediction: satPrediction,
       groundTrack: (sat.groundTrack ?? [lon, lat]) as [number, number][],
       groundHistory: sat.groundHistory ?? history,
       groundPrediction: sat.groundPrediction ?? prediction,
     } as Satellite
   })
+}
+
+function generateVisualOrbitTrail(angle: number, radius: number, yOffset: number, startMin: number, endMin: number) {
+  const points = []
+  const steps = 48
+  const total = endMin - startMin
+  for (let i = 0; i <= steps; i += 1) {
+    const t = startMin + (i / steps) * total
+    const theta = angle + (t / 90) * Math.PI * 2.0
+    points.push({
+      x: Math.cos(theta) * radius,
+      y: yOffset + Math.sin(theta * 0.6) * 0.1,
+      z: Math.sin(theta) * radius,
+      t,
+    })
+  }
+  return points
 }
 
 function buildPath(lon: number, lat: number, span: number) {
