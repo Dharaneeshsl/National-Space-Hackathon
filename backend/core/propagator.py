@@ -66,6 +66,13 @@ def propagate_rk4(initial_states, t0, dt, steps):
     
     Returns a numpy array of shape (steps, N, 6) with the trajectory.
     """
+    if dt <= 0:
+        raise ValueError("dt must be positive")
+    if steps <= 0:
+        raise ValueError("steps must be positive")
+    if initial_states.ndim != 2 or initial_states.shape[1] != 6:
+        raise ValueError("initial_states must have shape (N, 6)")
+
     N = initial_states.shape[0]
     trajectories = np.empty((steps, N, 6))
     trajectories[0] = initial_states

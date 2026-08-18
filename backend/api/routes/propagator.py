@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import numpy as np
 import time
 
@@ -15,8 +15,8 @@ router = APIRouter(prefix="/api", tags=["Propagator"])
 
 class PropagationRequest(BaseModel):
     satellite_id: str
-    time_step_sec: float = 60.0 # Default 1 minute step
-    duration_hours: float = 2.0 # Default propagate 2 hours
+    time_step_sec: float = Field(default=60.0, gt=0) # Default 1 minute step
+    duration_hours: float = Field(default=2.0, gt=0) # Default propagate 2 hours
 
 @router.post("/propagation/propagate")
 def propagate_orbit(req: PropagationRequest):

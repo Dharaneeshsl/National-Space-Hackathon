@@ -20,10 +20,24 @@ The **Autonomous Constellation Manager (ACM)** is an end-to-end framework target
 ### Option 1: Docker (Recommended)
 1. Boot the environment utilizing docker-compose:
    ```bash
-   docker-compose up --build
+   docker compose up --build
    ```
 2. The UI will be available at `http://localhost:5173`.
 3. The Backend API will be available at `http://localhost:8000`.
+4. Confirm startup with `curl http://localhost:8000/health` and open the dashboard at `http://localhost:5173`.
+
+### Validation
+
+From the repository root, run the following checks before release:
+
+```bash
+. .venv/bin/activate
+PYTHONPATH=backend pytest -q
+cd frontend
+npm ci
+npm run typecheck
+npm run build
+```
 
 ### Option 2: Manual Initialization
 **Backend**:

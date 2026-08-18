@@ -11,6 +11,9 @@ def compute_fuel_cost(delta_v: float, mass: float, isp: float = 300.0) -> float:
     
     Returns: fuel consumed in kg
     """
+    if delta_v < 0 or mass <= 0 or isp <= 0:
+        raise ValueError("delta_v must be non-negative; mass and isp must be positive")
+
     g0 = 0.00980665 # standard gravity in km/s^2
     effective_exhaust_velocity = isp * g0
     
@@ -29,6 +32,9 @@ def hohmann_transfer(r1: float, r2: float) -> tuple[float, float, float]:
     
     Returns: (total_delta_v, delta_v_1, delta_v_2) in km/s
     """
+    if r1 <= 0 or r2 <= 0:
+        raise ValueError("Orbit radii must be positive")
+
     # Velocity of initial and final circular orbits
     v1 = np.sqrt(MU / r1)
     v2 = np.sqrt(MU / r2)
@@ -58,6 +64,8 @@ def plan_avoidance_maneuver(conjunction_event, sat_state, sat_mass: float) -> di
     
     r = np.linalg.norm(pos)
     v = np.linalg.norm(vel)
+    if v == 0:
+        raise ValueError("Satellite velocity must be non-zero for a prograde maneuver")
     
     # Simplified collision avoidance logic:
     # We raise our altitude radially by ~2 km at TCA by burning prograde right now.
