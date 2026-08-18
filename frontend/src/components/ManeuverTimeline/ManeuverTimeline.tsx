@@ -1,8 +1,17 @@
-﻿import { useMemo } from "react"
+﻿import { useEffect, useMemo, useState } from "react"
+
 import type { Satellite } from "@/store/useTelemetryStore"
 
 interface ManeuverTimelineProps {
   satellites: Satellite[]
+}
+
+interface ConjunctionEvent {
+  sat1_id: string
+  sat2_id: string
+  tca: number
+  miss_distance_km: number
+  probability: number
 }
 
 interface Maneuver {
@@ -14,7 +23,27 @@ interface Maneuver {
 }
 
 export function ManeuverTimeline({ satellites }: ManeuverTimelineProps) {
-  const maneuvers = useMemo(() => buildManeuvers(satellites), [satellites])
+  const [events, setEvents] = useState<ConjunctionEvent[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch("/api/conjunction/all?time_window_hours=1")
+      .then((response) => {
+        if (!response.ok) throw new Error(`Conjunction request failed: ${response.status}`)
+        return response.json() as Promise<ConjunctionEvent[]>
+      })
+      .then((nextEvents) => {
+        if (!cancelled) setEvents(nextEvents)
+      })
+      .catch(() => {
+        if (!cancelled) setEvents([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [satellites.length])
+
+  const maneuvers = useMemo(() => buildManeuvers(events, satellites), [events, satellites])
 
   return (
     <div className="h-full">
@@ -33,6 +62,11 @@ export function ManeuverTimeline({ satellites }: ManeuverTimelineProps) {
             title={m.label}
           />
         ))}
+        {maneuvers.length === 0 && (
+          <div className="absolute inset-x-3 top-10 text-center text-[10px] text-white/45">
+            No conjunction-driven maneuver events in the next hour
+          </div>
+        )}
         <div className="mt-12 flex items-center justify-between text-[10px] text-white/40">
           <span>T-90 min</span>
           <span>Now</span>
@@ -43,14 +77,20 @@ export function ManeuverTimeline({ satellites }: ManeuverTimelineProps) {
   )
 }
 
-function buildManeuvers(satellites: Satellite[]): Maneuver[] {
-  const items: Maneuver[] = []
-  const count = Math.min(6, satellites.length)
-  for (let i = 0; i < count; i += 1) {
-    const base = 10 + i * 12
-    items.push({ id: `burn-${i}`, label: `Evasion Burn ${i + 1}`, start: base, end: base + 6, type: "burn" })
-    items.push({ id: `cool-${i}`, label: `Cooldown ${i + 1}`, start: base + 6, end: base + 12, type: "cooldown" })
-    items.push({ id: `rec-${i}`, label: `Recovery ${i + 1}`, start: base + 12, end: base + 18, type: "recovery" })
-  }
-  return items
+function buildManeuvers(events: ConjunctionEvent[], satellites: Satellite[]): Maneuver[] {
+  const names = new Map(satellites.map((satellite) => [satellite.id, satellite.name ?? satellite.id]))
+  const now = Date.now() / 1000
+
+  return events.slice(0, 6).map((event, index) => {
+    const minutesFromNow = (event.tca - now) / 60
+    const start = Math.max(2, Math.min(92, 50 + (minutesFromNow / 90) * 50))
+    const risk = event.miss_distance_km <= 250 ? "Critical" : "Warning"
+    return {
+      id: `${event.sat1_id}-${event.sat2_id}-${event.tca}-${index}`,
+      label: `${risk} approach: ${names.get(event.sat1_id) ?? event.sat1_id} / ${names.get(event.sat2_id) ?? event.sat2_id} (${event.miss_distance_km.toFixed(1)} km)`,
+      start,
+      end: Math.min(98, start + 6),
+      type: "burn",
+    }
+  })
 }

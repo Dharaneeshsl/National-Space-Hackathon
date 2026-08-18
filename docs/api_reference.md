@@ -36,5 +36,6 @@ Base URL: `http://localhost:8000`
 - **POST `/api/maneuver/plan`**: Propose a Delta-V collision avoidance.
      - **Request**: `ConjunctionEvent` details
      - **Response**: `ManeuverPlan`
-- **POST `/api/maneuver/execute`**: Perform maneuver and deduct fuel.
-     - **Request**: `{"satellite_id": "ID", "fuel_consumed_kg": 0.5}`
+- **POST `/api/maneuver/execute`**: Apply an impulsive delta-v to the persisted velocity and deduct fuel.
+     - **Request**: `{"satellite_id": "ID", "fuel_consumed_kg": 0.5, "delta_v": {"x": 0.001, "y": 0.0, "z": 0.0}}`
+     - **Response**: Execution status, remaining fuel, and updated `state_vector`.

@@ -24,3 +24,6 @@ jobs:
       - name: Syntax check
         run: |
           python -m py_compile $(git ls-files "backend/**/*.py")
+      - name: Test suite
+        run: |
+          PYTHONPATH=backend pytest -q

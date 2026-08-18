@@ -5,7 +5,13 @@ import numpy as np
 
 from models.satellite import ConjunctionEvent
 from core.propagator import tle_to_state_vector, propagate_rk4
-from core.conjunction import compute_miss_distance, find_tca, collision_probability
+from core.conjunction import (
+    CRITICAL_MISS_DISTANCE_KM,
+    WARNING_MISS_DISTANCE_KM,
+    collision_probability,
+    compute_miss_distance,
+    find_tca,
+)
 import data.db as db
 import time
 
@@ -23,7 +29,7 @@ def _get_states(satellites):
         if not sv and sat.tle:
             try:
                 sv = tle_to_state_vector(sat.tle)
-            except:
+            except Exception:
                 continue
         if sv:
             states.append([
@@ -69,7 +75,7 @@ def assess_satellite_risk(req: AssessRequest):
         distances = compute_miss_distance(target_trajectory, other_trajectory)
         tca, min_dist, _ = find_tca(times, distances, req.time_window_hours)
         
-        if tca != -1 and min_dist < 400.0:  # Hackathon demo: show any close approach within threshold
+        if tca != -1 and min_dist <= WARNING_MISS_DISTANCE_KM:
             prob = collision_probability(min_dist)
             events.append(ConjunctionEvent(
                 sat1_id=req.satellite_id,
@@ -105,7 +111,7 @@ def get_all_conjunctions(time_window_hours: float = 24.0):
             distances = compute_miss_distance(traj_i, traj_j)
             tca, min_dist, _ = find_tca(times, distances, time_window_hours)
             
-            if tca != -1 and min_dist < 400.0: # Hackathon demo: show any close approach within threshold
+            if tca != -1 and min_dist <= WARNING_MISS_DISTANCE_KM:
                 prob = collision_probability(min_dist)
                 events.append(ConjunctionEvent(
                     sat1_id=valid_ids[i],

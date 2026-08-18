@@ -3,7 +3,11 @@ from typing import Dict, Tuple
 
 import numpy as np
 
-from core.conjunction import compute_miss_distance
+from core.conjunction import (
+    CRITICAL_MISS_DISTANCE_KM,
+    WARNING_MISS_DISTANCE_KM,
+    compute_miss_distance,
+)
 from core.propagator import propagate_rk4, tle_to_state_vector
 import data.db as db
 from models.satellite import Satellite
@@ -12,6 +16,8 @@ from models.satellite import Satellite
 RISK_CACHE: Dict[str, str] = {}
 MIN_MISS_DISTANCE_CACHE_KM: Dict[str, float] = {}
 _CACHE_READY: bool = False
+_LAST_COMPUTED_AT: float = 0.0
+RISK_CACHE_TTL_SECONDS = 60.0
 
 
 def _states_from_catalog(sats: list[Satellite]) -> Tuple[np.ndarray, list[str]]:
@@ -49,8 +55,8 @@ def compute_and_store_collision_risk(
     *,
     time_window_hours: float = 24.0,
     dt_sec: float = 60.0,
-    critical_km: float = 250.0,
-    warning_km: float = 400.0,
+    critical_km: float = CRITICAL_MISS_DISTANCE_KM,
+    warning_km: float = WARNING_MISS_DISTANCE_KM,
 ) -> Dict[str, str]:
     """
     Computes a simple collision-risk classification by propagating the current catalog
@@ -59,7 +65,7 @@ def compute_and_store_collision_risk(
     This is intentionally lightweight and cached so `/api/visualization/snapshot`
     remains fast (frontend polls every ~1s).
     """
-    global RISK_CACHE, MIN_MISS_DISTANCE_CACHE_KM, _CACHE_READY
+    global RISK_CACHE, MIN_MISS_DISTANCE_CACHE_KM, _CACHE_READY, _LAST_COMPUTED_AT
 
     sats = db.get_all_satellites()
     states_array, valid_ids = _states_from_catalog(sats)
@@ -69,6 +75,7 @@ def compute_and_store_collision_risk(
         RISK_CACHE = {s.id: "safe" for s in sats}
         MIN_MISS_DISTANCE_CACHE_KM = {}
         _CACHE_READY = True
+        _LAST_COMPUTED_AT = time.monotonic()
         return RISK_CACHE
 
     steps = int((time_window_hours * 3600) / dt_sec)
@@ -102,11 +109,19 @@ def compute_and_store_collision_risk(
             RISK_CACHE[sid] = "safe"
 
     _CACHE_READY = True
+    _LAST_COMPUTED_AT = time.monotonic()
     return RISK_CACHE
 
 
 def is_cache_ready() -> bool:
     return _CACHE_READY
+
+
+def refresh_if_stale(max_age_seconds: float = RISK_CACHE_TTL_SECONDS) -> Dict[str, str]:
+    """Refresh the catalog risk cache on first use and at a bounded interval."""
+    if not _CACHE_READY or time.monotonic() - _LAST_COMPUTED_AT >= max_age_seconds:
+        return compute_and_store_collision_risk()
+    return RISK_CACHE
 
 
 def get_collision_risk(satellite_id: str) -> str:

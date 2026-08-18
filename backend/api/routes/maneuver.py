@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import numpy as np
 import time
 
-from models.satellite import ManeuverPlan, ConjunctionEvent
+from models.satellite import ManeuverPlan, ConjunctionEvent, Vector3
 from core.propagator import tle_to_state_vector
 import core.maneuver as maneuver_logic
 import data.db as db
@@ -50,18 +50,39 @@ def plan_maneuver(event: ConjunctionEvent):
 
 class ExecuteRequest(BaseModel):
     satellite_id: str
-    fuel_consumed_kg: float
+    fuel_consumed_kg: float = Field(ge=0)
+    delta_v: Vector3 = Field(default_factory=lambda: Vector3(x=0.0, y=0.0, z=0.0))
+
 
 @router.post("/execute")
 def execute_maneuver(req: ExecuteRequest):
-    """Executes a maneuver, deducting fuel from the satellite."""
+    """Apply an impulsive burn to the persisted velocity and deduct its fuel cost."""
     sats = db.get_all_satellites()
     target_sat = next((s for s in sats if s.id == req.satellite_id), None)
-    
+
     if not target_sat:
         raise HTTPException(status_code=404, detail="Satellite not found")
-        
-    target_sat.fuel_kg = max(0.0, target_sat.fuel_kg - req.fuel_consumed_kg)
+    if req.fuel_consumed_kg > target_sat.fuel_kg:
+        raise HTTPException(status_code=400, detail="Insufficient fuel for maneuver")
+
+    state_vector = target_sat.state_vector
+    if state_vector is None and target_sat.tle is not None:
+        try:
+            state_vector = tle_to_state_vector(target_sat.tle)
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail="Cannot derive satellite state from TLE") from exc
+    if state_vector is None:
+        raise HTTPException(status_code=400, detail="Satellite state vector is missing")
+
+    state_vector.velocity.x += req.delta_v.x
+    state_vector.velocity.y += req.delta_v.y
+    state_vector.velocity.z += req.delta_v.z
+    target_sat.state_vector = state_vector
+    target_sat.fuel_kg -= req.fuel_consumed_kg
     db.save_satellites(sats)
-    
-    return {"status": "success", "remaining_fuel": target_sat.fuel_kg}
+
+    return {
+        "status": "success",
+        "remaining_fuel": target_sat.fuel_kg,
+        "state_vector": target_sat.state_vector.model_dump(),
+    }

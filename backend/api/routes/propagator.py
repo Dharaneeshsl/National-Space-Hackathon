@@ -8,7 +8,8 @@ import time
 from models.satellite import OrbitPoint
 from core.propagator import tle_to_state_vector, propagate_rk4
 import data.db as db
-from core.collision_risk import get_collision_risk
+import data.debris as debris_db
+from core.collision_risk import get_collision_risk, refresh_if_stale
 
 router = APIRouter(prefix="/api", tags=["Propagator"])
 
@@ -71,6 +72,7 @@ def build_snapshot_payload() -> dict:
     Shared snapshot dict for GET /api/visualization/snapshot and /ws/telemetry.
     Matches frontend Snapshot: ISO timestamp string, satellites, debris_cloud.
     """
+    refresh_if_stale()
     sats = db.get_all_satellites()
     t_iso = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
@@ -97,10 +99,21 @@ def build_snapshot_payload() -> dict:
             }
         )
 
+    debris_cloud = [
+        {
+            "id": item.id,
+            "name": item.name,
+            "position": item.position.model_dump(),
+            "velocity": item.velocity_km_s,
+            "risk": item.risk,
+        }
+        for item in debris_db.get_all_debris()
+    ]
+
     return {
         "timestamp": t_iso,
         "satellites": snapshot_sats,
-        "debris_cloud": [],
+        "debris_cloud": debris_cloud,
     }
 
 

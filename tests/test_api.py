@@ -27,4 +27,5 @@ def test_snapshot():
     assert "satellites" in data
     assert isinstance(data["satellites"], list)
     assert "debris_cloud" in data
-    assert data["debris_cloud"] == []
+    assert isinstance(data["debris_cloud"], list)
+    assert data["debris_cloud"]

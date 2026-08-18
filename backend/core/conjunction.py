@@ -1,6 +1,9 @@
 import numpy as np
 from typing import List, Dict, Any
 
+CRITICAL_MISS_DISTANCE_KM = 250.0
+WARNING_MISS_DISTANCE_KM = 400.0
+
 def compute_miss_distance(traj1: np.ndarray, traj2: np.ndarray) -> np.ndarray:
     """
     Computes the distance between two trajectories over time.

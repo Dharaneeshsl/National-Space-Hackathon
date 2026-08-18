@@ -26,3 +26,9 @@ Thumbs.db
 coverage
 .nyc_output
 
+# Python runtime and test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/

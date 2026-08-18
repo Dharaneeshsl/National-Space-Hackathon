@@ -1,0 +1,30 @@
+[
+  {
+    "id": "DEB-001",
+    "name": "COSMOS 1408 fragment A",
+    "position": {"x": 6800.0, "y": 120.0, "z": 900.0},
+    "velocity_km_s": 7.62,
+    "risk": "warning"
+  },
+  {
+    "id": "DEB-002",
+    "name": "COSMOS 1408 fragment B",
+    "position": {"x": -6840.0, "y": 80.0, "z": -760.0},
+    "velocity_km_s": 7.58,
+    "risk": "safe"
+  },
+  {
+    "id": "DEB-003",
+    "name": "Upper-stage fragment",
+    "position": {"x": 7050.0, "y": -240.0, "z": 420.0},
+    "velocity_km_s": 7.48,
+    "risk": "safe"
+  },
+  {
+    "id": "DEB-004",
+    "name": "Tracked fragment",
+    "position": {"x": -6975.0, "y": 160.0, "z": 610.0},
+    "velocity_km_s": 7.51,
+    "risk": "critical"
+  }
+]
