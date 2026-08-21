@@ -9,6 +9,10 @@ The **Autonomous Constellation Manager (ACM)** is an end-to-end framework target
 - **Automated Conjunction Assessment**: Predicts the Time of Closest Approach (TCA) and isotropic 2D Gaussian probability of collisions for N-body catalogs.
 - **Maneuver Planning**: Employs classical orbital dynamics mathematics (Hohmann / Prograde maneuvers) mapped alongside fuel mass consumption using the Tsiolkovsky rocket equation to plan automatic avoidance strategies.
 
+## Hackathon Submission
+
+The complete project narrative, architecture, end-to-end demonstration script, API inventory, validation evidence, and production handoff are documented in [`docs/HACKATHON_SUBMISSION.md`](docs/HACKATHON_SUBMISSION.md).
+
 ## Requirements
 
 - **Node.js**: v18+ (For Frontend)

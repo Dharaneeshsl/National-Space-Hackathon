@@ -2,6 +2,12 @@
 
 Base URL: `http://localhost:8000`
 
+## Service Readiness
+
+- **GET `/health`**: Lightweight process health check.
+- **GET `/ready`**: Validates the satellite catalog, snapshot builder, risk cache, and debris catalog.
+- **WebSocket `/ws/telemetry`**: Streams a fresh snapshot every second for the dashboard.
+
 ## Satellites (`/api/satellites`)
 
 - **GET `/api/satellites`**: Retrieves all tracked satellites.
@@ -22,7 +28,7 @@ Base URL: `http://localhost:8000`
     ```
     - **Response**: List of `OrbitPoint` trajectories (t, x,y,z, vx,vy,vz)
 
-- **GET `/api/visualization/snapshot`**: Provides the UI with instantaneous global state.
+- **GET `/api/visualization/snapshot`**: Provides the UI with instantaneous global state, including satellite telemetry and debris objects.
 
 ## Conjunction Assessment (`/api/conjunction`)
 

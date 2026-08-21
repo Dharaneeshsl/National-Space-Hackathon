@@ -1,5 +1,5 @@
 ﻿import { useEffect } from "react"
-import { connectTelemetrySocket, fetchSnapshot, generateMockSnapshot } from "@/services/api"
+import { connectTelemetrySocket, fetchSnapshot } from "@/services/api"
 import { useTelemetryStore } from "@/store/useTelemetryStore"
 
 export function useTelemetryPolling() {
@@ -19,10 +19,9 @@ export function useTelemetryPolling() {
         if (active) {
           setSnapshot(data)
         }
-      } catch {
+      } catch (error) {
         if (active) {
-          setSnapshot(generateMockSnapshot())
-          setError("Live feed unavailable, displaying fallback telemetry.")
+          setError(error instanceof Error ? error.message : "Live telemetry feed unavailable.")
         }
       }
     }

@@ -1,7 +1,7 @@
 import asyncio
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from core.collision_risk import compute_and_store_collision_risk
@@ -47,7 +47,29 @@ app.include_router(maneuver.router)
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "version": "1.0.0"}
+    return {"status": "ok", "version": "1.0.0", "service": "acm-api"}
+
+
+@app.get("/ready")
+def readiness_check():
+    """Validate that the catalog, risk cache, and visualization payload are operational."""
+    try:
+        snapshot = build_snapshot_payload()
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Readiness checks failed") from exc
+
+    satellites = snapshot["satellites"]
+    debris = snapshot["debris_cloud"]
+    return {
+        "status": "ready",
+        "version": "1.0.0",
+        "checks": {
+            "catalog": bool(satellites),
+            "snapshot": True,
+            "debris_catalog": bool(debris),
+        },
+        "counts": {"satellites": len(satellites), "debris": len(debris)},
+    }
 
 
 @app.websocket("/ws/telemetry")

@@ -27,3 +27,17 @@ jobs:
       - name: Test suite
         run: |
           PYTHONPATH=backend pytest -q
+      - name: Startup smoke test
+        run: |
+          cd backend
+          PYTHONPATH=. uvicorn main:app --host 127.0.0.1 --port 8000 > /tmp/acm-backend.log 2>&1 &
+          pid=$!
+          trap "kill $pid" EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8000/ready; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/acm-backend.log
+          exit 1
